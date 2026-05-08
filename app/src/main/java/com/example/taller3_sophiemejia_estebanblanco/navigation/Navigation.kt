@@ -5,6 +5,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.taller3_sophiemejia_estebanblanco.screens.LogIn
+import com.example.taller3_sophiemejia_estebanblanco.screens.register
 
 enum class AppScreens{
     login,
@@ -15,13 +16,13 @@ enum class AppScreens{
 @Composable
 fun Navigation(){
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = AppScreens.login.name){
+    NavHost(navController = navController, startDestination = AppScreens.register.name){
         composable(route = AppScreens.login.name){
 
             LogIn(navController)
         }
         composable(route = AppScreens.register.name){
-            //Register(navController)
+            register(navController)
         }
         composable(route = AppScreens.home.name){
             //Home(navController)
