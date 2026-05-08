@@ -35,8 +35,9 @@ import com.google.firebase.database.FirebaseDatabase
 
 
 
+
 @Composable
-fun register(controller: NavController) {
+fun Register(controller: NavController) {
     var name by remember { mutableStateOf("") }
     var lastname by remember { mutableStateOf("") }
     var id by remember { mutableStateOf("") }

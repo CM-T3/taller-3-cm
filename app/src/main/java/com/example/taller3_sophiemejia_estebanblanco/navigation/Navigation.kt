@@ -6,7 +6,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.taller3_sophiemejia_estebanblanco.screens.Home
 import com.example.taller3_sophiemejia_estebanblanco.screens.LogIn
-import com.example.taller3_sophiemejia_estebanblanco.screens.register
+import com.example.taller3_sophiemejia_estebanblanco.screens.Register
+
+//import com.example.taller3_sophiemejia_estebanblanco.screens.register
 
 enum class AppScreens{
     login,
@@ -23,7 +25,7 @@ fun Navigation(){
             LogIn(navController)
         }
         composable(route = AppScreens.register.name){
-            register(navController)
+            Register(navController)
         }
         composable(route = AppScreens.home.name){
             Home()

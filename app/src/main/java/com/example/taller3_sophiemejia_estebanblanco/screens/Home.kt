@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.example.taller3_sophiemejia_estebanblanco.util.readJsonPos
 import com.google.accompanist.permissions.*
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -101,12 +102,11 @@ fun LocationWithMapRequest() {
                 icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
             )
 
-            // Las 5 localizaciones del JSON
-            val jsonPois = readJsonPois() // Mtodo para simular  JSON
-            jsonPois.forEach { poi ->
+            val jsonPois = readJsonPos(context)
+            jsonPois.forEach { it ->
                 Marker(
-                    state = MarkerState(position = poi),
-                    title = "Punto JSON"
+                    state = MarkerState(position = it.location),
+                    title = it.name
                 )
             }
         }
@@ -137,15 +137,4 @@ fun createLocationCallback(onLocationChange: (LocationResult) -> Unit): Location
         }
     }
     return callback
-}
-
-// --- SIMULACIÓN DEL ARCHIVO JSON ---
-fun readJsonPois(): List<LatLng> {
-    return listOf(
-        LatLng(4.6097, -74.0817),
-        LatLng(4.6105, -74.0825),
-        LatLng(4.6110, -74.0810),
-        LatLng(4.6085, -74.0805),
-        LatLng(4.6090, -74.0830)
-    )
 }
