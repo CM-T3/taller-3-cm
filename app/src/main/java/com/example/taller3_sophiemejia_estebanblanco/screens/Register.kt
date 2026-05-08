@@ -27,10 +27,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.example.taller3_sophiemejia_estebanblanco.navigation.AppScreens
 import com.google.firebase.database.FirebaseDatabase
+
+
 
 @Composable
 fun register(controller: NavController) {
@@ -45,7 +48,8 @@ fun register(controller: NavController) {
     val auth = FirebaseAuth.getInstance()
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         item {
             Column(
@@ -54,81 +58,60 @@ fun register(controller: NavController) {
                     .padding(16.dp),
                 horizontalAlignment = Alignment.Start
             ) {
-
                 Text(text = "Nombres", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                TextField(
+                OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = {
-                        Text(
-                            "Ingrese su nombre", color = Color.Gray, fontSize = 15.sp
-                        )
-                    })
+                    label = { Text("Ingrese su nombre") }
+                )
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(text = "Apellidos", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                TextField(
+                OutlinedTextField(
                     value = lastname,
                     onValueChange = { lastname = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = {
-                        Text(
-                            "Ingrese su apellido", color = Color.Gray, fontSize = 15.sp
-                        )
-                    })
+                    label = { Text("Ingrese su apellido") }
+                )
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(text = "No. de Identificación", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                TextField(
+                OutlinedTextField(
                     value = id,
                     onValueChange = { id = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = {
-                        Text(
-                            "Ingrese su número de identificación",
-                            color = Color.Gray,
-                            fontSize = 15.sp
-                        )
-                    })
+                    label = { Text("Ingrese su número de identificación") }
+                )
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(text = "Email", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                TextField(
+                OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = {
-                        Text(
-                            "Ingrese su email",
-                            color = Color.Gray,
-                            fontSize = 15.sp
-                        )
-                    })
+                    label = { Text("Ingrese su email") }
+                )
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(text = "Contraseña", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                TextField(
+                OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = {
-                        Text(
-                            "Ingrese su contraseña", color = Color.Gray, fontSize = 15.sp
-                        )
-                    })
+                    label = { Text("Ingrese su contraseña") }
+                )
                 Spacer(modifier = Modifier.height(32.dp))
 
                 MyButton(text = "Registrarse") {
-
                     val database = FirebaseDatabase.getInstance()
 
                     auth.createUserWithEmailAndPassword(email, password)
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
-                                val user = auth.currentUser
+                                val userAuth = auth.currentUser
 
-                                user?.let { firebaseUser ->
+                                userAuth?.let { firebaseUser ->
                                     val upcrb = UserProfileChangeRequest.Builder()
                                     upcrb.setDisplayName("$name $lastname")
                                     firebaseUser.updateProfile(upcrb.build())
@@ -142,35 +125,16 @@ fun register(controller: NavController) {
                                         longitude = longitude.toDoubleOrNull() ?: 0.0
                                     )
 
-                                    val USERS_PATH = "users/"
-                                    val myRef = database.getReference(USERS_PATH + firebaseUser.uid)
-
-                                    myRef.setValue(nuevoUsuario).addOnCompleteListener { dbTask ->
-                                        if (dbTask.isSuccessful) {
-                                            controller.navigate(AppScreens.home.name)
-                                        } else {
-                                            Log.e("MYTAG", "Error guardando datos en Realtime DB")
-                                        }
-                                    }
+                                    val myRef = database.getReference("users/" + firebaseUser.uid)
+                                    myRef.setValue(nuevoUsuario)
+                                    controller.navigate(AppScreens.home.name)
                                 }
                             } else {
-                                Log.e("MYTAG", "Error crenado el usuario $email", task.exception)
+                                Log.e("MYTAG", "Error: " + task.exception?.message)
                             }
                         }
                 }
             }
-
-
         }
     }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun RegisterPreview() {
-    // Creamos un controlador "falso" solo para que el preview no de error
-    val dummyController = rememberNavController()
-
-    // Llamamos a tu función pasándole el controlador
-    register(controller = dummyController)
 }
