@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.taller3_sophiemejia_estebanblanco.screens.Home
 import com.example.taller3_sophiemejia_estebanblanco.screens.LogIn
 import com.example.taller3_sophiemejia_estebanblanco.screens.register
 
@@ -25,7 +26,7 @@ fun Navigation(){
             register(navController)
         }
         composable(route = AppScreens.home.name){
-            //Home(navController)
+            Home()
         }
     }
 }
