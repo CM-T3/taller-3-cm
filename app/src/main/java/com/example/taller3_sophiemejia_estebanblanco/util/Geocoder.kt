@@ -1,7 +1,7 @@
-package com.example.taller2_sophiemejia_estebanblanco.util
+package com.example.taller3_sophiemejia_estebanblanco.util
 
 
-import com.example.taller2_sophiemejia_estebanblanco.geocoder
+import com.example.taller3_sophiemejia_estebanblanco.geocoder
 import com.google.android.gms.maps.model.LatLng
 
 fun findAddress(location: LatLng): String? {
