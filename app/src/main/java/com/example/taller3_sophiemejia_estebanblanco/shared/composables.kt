@@ -1,5 +1,6 @@
 package com.example.taller3_sophiemejia_estebanblanco.shared
 
+import android.R.attr.enabled
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,19 +39,23 @@ import com.google.firebase.auth.FirebaseAuth
 
 
 @Composable
-fun MyButton(text: String, action : ()->Unit ){
-    Button(onClick = action, modifier = Modifier.fillMaxWidth(),
+fun MyButton(text: String, enabled: Boolean = true, action: () -> Unit) {
+    Button(
+        onClick = action,
+        enabled = enabled,
+        modifier = Modifier.fillMaxWidth(),
         colors = ButtonColors(
             contentColor = Color.White,
             containerColor = colorResource(R.color.azulBonito),
             disabledContainerColor = Color.Gray,
             disabledContentColor = Color.Gray
         )
-    ){
+    ) {
         Text(text)
     }
 
 }
+
 @Composable
 fun MyBottomBar(navController: NavController, indexActual: Int) {
 
@@ -82,7 +87,11 @@ fun MyBottomBar(navController: NavController, indexActual: Int) {
 
             NavigationBarItem(
                 icon = { Icon(Icons.Default.Person, contentDescription = "Usuarios Disponibles") },
-                label = { Text("Usuarios Disponibles", fontSize = 10.sp, fontWeight = FontWeight.Bold) },
+                label = {
+                    Text(
+                        "Usuarios Disponibles", fontSize = 10.sp, fontWeight = FontWeight.Bold
+                    )
+                },
                 selected = indexActual == 1,
                 onClick = {
                     if (indexActual != 1) {
@@ -97,14 +106,17 @@ fun MyBottomBar(navController: NavController, indexActual: Int) {
             )
 
             NavigationBarItem(
-                icon = { Icon(Icons.Default.Close, contentDescription = "Cerrar Sesión") },
+                icon = {
+                Icon(
+                    Icons.Default.Close, contentDescription = "Cerrar Sesión"
+                )
+            },
                 label = { Text("Cerrar Sesión", fontSize = 10.sp, fontWeight = FontWeight.Bold) },
                 selected = indexActual == 2,
                 onClick = {
                     FirebaseAuth.getInstance().signOut()
                     navController.navigate(AppScreens.login.name)
-                }
-            )
+                })
         }
     }
 }

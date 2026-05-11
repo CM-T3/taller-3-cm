@@ -65,10 +65,11 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.firebase.auth)
-    implementation("com.google.firebase:firebase-database:21.0.0") // ÚNICA LÍNEA PARA LA BASE DE DATOS
+    implementation("com.google.firebase:firebase-database:21.0.0")
     implementation(libs.googleid)
     implementation(libs.play.services.location)
     implementation(libs.play.services.maps)
+    implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.google.accompanist:accompanist-permissions:0.37.2")
     implementation("com.google.maps.android:maps-compose:4.3.3")
