@@ -16,6 +16,7 @@ import androidx.navigation.NavController
 import com.example.taller3_sophiemejia_estebanblanco.auth
 import com.example.taller3_sophiemejia_estebanblanco.model.User
 import com.example.taller3_sophiemejia_estebanblanco.navigation.AppScreens
+import com.example.taller3_sophiemejia_estebanblanco.shared.MyBottomBar
 import com.example.taller3_sophiemejia_estebanblanco.shared.MyButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -26,10 +27,20 @@ import com.google.firebase.database.ValueEventListener
 @Composable
 fun AvailableUsers(navController: NavController) {
     var userList by remember { mutableStateOf(emptyList<Pair<String, User>>()) }
+    var isMeAvailable by remember { mutableStateOf(true) }
+
     val actUserId = FirebaseAuth.getInstance().currentUser?.uid
+    val database = FirebaseDatabase.getInstance().getReference("users")
+
+    LaunchedEffect(actUserId) {
+        actUserId?.let { uid ->
+            database.child(uid).child("available").get().addOnSuccessListener { snapshot ->
+                isMeAvailable = snapshot.getValue(Boolean::class.java) ?: true
+            }
+        }
+    }
 
     DisposableEffect(Unit) {
-        val database = FirebaseDatabase.getInstance().getReference("users")
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val users = mutableListOf<Pair<String, User>>()
@@ -49,38 +60,68 @@ fun AvailableUsers(navController: NavController) {
         onDispose { database.removeEventListener(listener) }
     }
 
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .padding(16.dp)) {
-        Text("Usuarios Disponibles", modifier = Modifier.padding(16.dp))
+    Scaffold(
+        bottomBar = {
+            MyBottomBar(navController = navController, indexActual = 1)
+        }
+    ) { paddingValues ->
 
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            items(userList) { (userId, user) ->
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Perfil",
-                                modifier = Modifier.size(40.dp)
-                            )
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Text(text = "${user.name} ${user.lastname}")
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Usuarios Disponibles",
+                    style = MaterialTheme.typography.titleLarge
+                )
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(if (isMeAvailable) "Disponible" else "Oculto", style = MaterialTheme.typography.bodySmall)
+                    Spacer(Modifier.width(8.dp))
+                    Switch(
+                        checked = isMeAvailable,
+                        onCheckedChange = { checked ->
+                            isMeAvailable = checked
+                            actUserId?.let { uid ->
+                                database.child(uid).child("available").setValue(checked)
+                            }
                         }
+                    )
+                }
+            }
 
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                items(userList) { (userId, user) ->
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = "Perfil",
+                                    modifier = Modifier.size(40.dp)
+                                )
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Text(text = "${user.name} ${user.lastname}")
+                            }
 
-                        MyButton("Ver") {
-
-                            navController.navigate(AppScreens.avaliableMap.name)
-
+                            MyButton("Ver") {
+                                navController.navigate("${AppScreens.availableMap.name}/$userId")                            }
                         }
-
                     }
                 }
             }

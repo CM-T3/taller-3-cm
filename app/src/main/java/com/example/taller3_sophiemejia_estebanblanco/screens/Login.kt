@@ -122,7 +122,10 @@ fun LogIn(controller: NavController, model : AuthViewModel= viewModel()) {
                 }
             }
         }
-        MyButton("Register") { }
+        MyButton("Register") {
+            controller.navigate(AppScreens.register.name)
+
+        }
 
     }
 }

@@ -132,7 +132,7 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
                                         password = state.password,
                                         latitude = 0.0,
                                         longitude = 0.0,
-                                        available = true,
+                                        available = false,
                                         profilepic = state.profilepic
                                     )
 

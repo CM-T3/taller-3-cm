@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,7 +21,9 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.taller3_sophiemejia_estebanblanco.model.User
+import com.example.taller3_sophiemejia_estebanblanco.shared.MyBottomBar
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -67,7 +70,7 @@ class ShareViewModel : ViewModel() {
 }
 
 @Composable
-fun sharedLocation(trackedUserId: String, viewModel: ShareViewModel = viewModel()) {
+fun sharedLocation(trackedUserId: String, viewModel: ShareViewModel = viewModel(), navController: NavController) {
     val context = LocalContext.current
     val locationProvider = remember { LocationServices.getFusedLocationProviderClient(context) }
     val currentUserId = remember { FirebaseAuth.getInstance().currentUser?.uid }
@@ -84,6 +87,7 @@ fun sharedLocation(trackedUserId: String, viewModel: ShareViewModel = viewModel(
                     viewModel.updateTrackedLocation(LatLng(user.latitude, user.longitude))
                 }
             }
+
             override fun onCancelled(error: DatabaseError) {}
         }
         userRef.addValueEventListener(listener)
@@ -109,8 +113,16 @@ fun sharedLocation(trackedUserId: String, viewModel: ShareViewModel = viewModel(
                 }
             }
         }
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            locationProvider.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+        if (ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            locationProvider.requestLocationUpdates(
+                locationRequest,
+                locationCallback,
+                Looper.getMainLooper()
+            )
         }
         onDispose { locationProvider.removeLocationUpdates(locationCallback) }
     }
@@ -124,50 +136,69 @@ fun sharedLocation(trackedUserId: String, viewModel: ShareViewModel = viewModel(
                 results
             )
             val distanceMeters = results[0].roundToInt()
-            val text = if (distanceMeters > 1000) "${distanceMeters / 1000.0} km" else "$distanceMeters m"
+            val text =
+                if (distanceMeters > 1000) "${distanceMeters / 1000.0} km" else "$distanceMeters m"
             viewModel.updateDistanceText(text)
         }
     }
+    Scaffold(
+        bottomBar = {
+            MyBottomBar(navController = navController, indexActual = 1)
+        }
+    ) { paddingValues ->
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        if (state.myLocation != null && state.trackedLocation != null) {
-            val cameraPositionState = rememberCameraPositionState {
-                position = CameraPosition.fromLatLngZoom(state.myLocation!!, 14f)
-            }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
 
-            GoogleMap(
-                modifier = Modifier.fillMaxSize(),
-                cameraPositionState = cameraPositionState,
-                properties = MapProperties(isMyLocationEnabled = false)
-            ) {
-                Marker(
-                    state = MarkerState(position = state.myLocation!!),
-                    title = "Tú",
-                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
-                )
-                Marker(
-                    state = MarkerState(position = state.trackedLocation!!),
-                    title = state.trackedUser,
-                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .background(Color.White.copy(alpha = 0.9f), RoundedCornerShape(8.dp))
-                    .padding(16.dp)
-                    .align(Alignment.TopCenter)
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                    Text("Siguiendo a: ${state.trackedUser}", fontWeight = FontWeight.Bold)
-                    Text("Distancia: ${state.distanceText}", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleLarge)
+            if (state.myLocation != null && state.trackedLocation != null) {
+                val cameraPositionState = rememberCameraPositionState {
+                    position = CameraPosition.fromLatLngZoom(state.myLocation!!, 14f)
                 }
-            }
-        } else {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+
+                GoogleMap(
+                    modifier = Modifier.fillMaxSize(),
+                    cameraPositionState = cameraPositionState,
+                    properties = MapProperties(isMyLocationEnabled = false)
+                ) {
+                    Marker(
+                        state = MarkerState(position = state.myLocation!!),
+                        title = "Tú",
+                        icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
+                    )
+                    Marker(
+                        state = MarkerState(position = state.trackedLocation!!),
+                        title = state.trackedUser,
+                        icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .background(Color.White.copy(alpha = 0.9f), RoundedCornerShape(8.dp))
+                        .padding(16.dp)
+                        .align(Alignment.TopCenter)
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Siguiendo a: ${state.trackedUser}", fontWeight = FontWeight.Bold)
+                        Text(
+                            "Distancia: ${state.distanceText}",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    }
+                }
+            } else {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
             }
         }
     }

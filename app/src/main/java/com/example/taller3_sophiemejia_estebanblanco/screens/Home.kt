@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.os.Looper
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -12,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavController
+import com.example.taller3_sophiemejia_estebanblanco.shared.MyBottomBar
 import com.example.taller3_sophiemejia_estebanblanco.util.readJsonPos
 import com.google.accompanist.permissions.*
 import com.google.android.gms.location.*
@@ -24,7 +27,7 @@ import com.google.firebase.database.FirebaseDatabase
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun Home() {
+fun Home(navController: NavController) {
     val locationPermission = Manifest.permission.ACCESS_FINE_LOCATION
     val permission = rememberPermissionState(locationPermission)
     var showButton by remember { mutableStateOf(false) }
@@ -39,26 +42,38 @@ fun Home() {
             }
         }
     }
-
-    if (permission.status.isGranted) {
-        LocationWithMapRequest()
-    } else {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(15.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            if (showButton) {
-                Text("Se requiere acceder a gps")
-                Button(onClick = { permission.launchPermissionRequest() }) {
-                    Text("Pedir permiso de localizacion")
-                }
+    Scaffold(
+        bottomBar = {
+            MyBottomBar(navController = navController, indexActual = 0)
+        }
+    ) { paddingValues ->
+        // Envuelve tu contenido actual en un Box o Column aplicando el paddingValues
+        Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+            if (permission.status.isGranted) {
+                LocationWithMapRequest()
             } else {
-                Text("NO hay acceso")
+
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(15.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    if (showButton) {
+                        Text("Se requiere acceder a gps")
+                        Button(onClick = { permission.launchPermissionRequest() }) {
+                            Text("Pedir permiso de localizacion")
+                        }
+                    } else {
+                        Text("NO hay acceso")
+                    }
+                }
             }
         }
     }
 }
+
+
+
 
 @Composable
 fun LocationWithMapRequest() {
@@ -104,6 +119,7 @@ fun LocationWithMapRequest() {
             position = CameraPosition.fromLatLngZoom(currentLocation, 15f)
         }
 
+
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState,
@@ -123,6 +139,9 @@ fun LocationWithMapRequest() {
                 )
             }
         }
+
+
+
     } else {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("Calculando GPS...")

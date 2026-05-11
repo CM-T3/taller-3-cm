@@ -1,5 +1,6 @@
 package com.example.taller3_sophiemejia_estebanblanco.model
 
+
 data class User(
     val name: String = "",
     val lastname: String = "",

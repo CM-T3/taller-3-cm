@@ -34,7 +34,7 @@ import com.example.taller3_sophiemejia_estebanblanco.R
 import com.example.taller3_sophiemejia_estebanblanco.navigation.AppScreens
 import com.example.taller3_sophiemejia_estebanblanco.screens.Home
 import com.example.taller3_sophiemejia_estebanblanco.screens.AvailableUsers
-
+import com.google.firebase.auth.FirebaseAuth
 
 
 @Composable
@@ -86,7 +86,7 @@ fun MyBottomBar(navController: NavController, indexActual: Int) {
                 selected = indexActual == 1,
                 onClick = {
                     if (indexActual != 1) {
-                        navController.navigate("Users")
+                        navController.navigate(AppScreens.availableUsers.name)
                     }
                 },
                 colors = NavigationBarItemDefaults.colors(
@@ -101,15 +101,9 @@ fun MyBottomBar(navController: NavController, indexActual: Int) {
                 label = { Text("Cerrar Sesión", fontSize = 10.sp, fontWeight = FontWeight.Bold) },
                 selected = indexActual == 2,
                 onClick = {
-                    if (indexActual != 2) {
-                        navController.navigate("CloseSesion")
-                    }
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = Color.DarkGray,
-                    selectedIconColor = Color.White,
-                    unselectedIconColor = Color.Gray
-                )
+                    FirebaseAuth.getInstance().signOut()
+                    navController.navigate(AppScreens.login.name)
+                }
             )
         }
     }
