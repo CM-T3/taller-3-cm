@@ -25,6 +25,7 @@ import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -35,6 +36,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlin.math.roundToInt
+
 
 data class shareState(
     val myLocation: LatLng? = null,
@@ -68,7 +70,8 @@ class ShareViewModel : ViewModel() {
 fun sharedLocation(trackedUserId: String, viewModel: ShareViewModel = viewModel()) {
     val context = LocalContext.current
     val locationProvider = remember { LocationServices.getFusedLocationProviderClient(context) }
-
+    val currentUserId = remember { FirebaseAuth.getInstance().currentUser?.uid }
+    val database = remember { FirebaseDatabase.getInstance().getReference("users") }
     val state by viewModel.shareState.collectAsState()
 
     DisposableEffect(trackedUserId) {
@@ -91,8 +94,18 @@ fun sharedLocation(trackedUserId: String, viewModel: ShareViewModel = viewModel(
         val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000).build()
         val locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
-                result.lastLocation?.let {
-                    viewModel.updateMyLocation(LatLng(it.latitude, it.longitude))
+                val location = result.lastLocation
+
+                if (location != null) {
+                    viewModel.updateMyLocation(LatLng(location.latitude, location.longitude))
+
+                    if (currentUserId != null) {
+                        val updates = mapOf<String, Any>(
+                            "latitude" to location.latitude,
+                            "longitude" to location.longitude
+                        )
+                        database.child(currentUserId).updateChildren(updates)
+                    }
                 }
             }
         }

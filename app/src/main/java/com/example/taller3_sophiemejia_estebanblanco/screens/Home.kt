@@ -19,6 +19,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -69,11 +71,22 @@ fun LocationWithMapRequest() {
 
     val locationRequest = remember { createLocationRequest() }
 
+    val currentUserId = remember { FirebaseAuth.getInstance().currentUser?.uid }
+    val database = remember { FirebaseDatabase.getInstance().getReference("users") }
+
     val locationCallback = remember {
         createLocationCallback { result ->
             result.lastLocation?.let {
                 latitude = it.latitude
                 longitude = it.longitude
+
+                if (currentUserId != null) {
+                    val updates = mapOf<String, Any>(
+                        "latitude" to it.latitude,
+                        "longitude" to it.longitude
+                    )
+                    database.child(currentUserId).updateChildren(updates)
+                }
             }
         }
     }
