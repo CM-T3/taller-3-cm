@@ -265,6 +265,7 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
                                             controller.navigate(AppScreens.home.name)
                                         }
                                 }
+
                             } else {
                                 Log.e("Register", "Error: ${task.exception?.message}")
                             }

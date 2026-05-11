@@ -25,6 +25,7 @@ import androidx.navigation.NavController
 import com.example.taller3_sophiemejia_estebanblanco.model.User
 import com.example.taller3_sophiemejia_estebanblanco.shared.MyBottomBar
 import com.google.android.gms.location.*
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -76,6 +77,17 @@ fun sharedLocation(trackedUserId: String, viewModel: ShareViewModel = viewModel(
     val currentUserId = remember { FirebaseAuth.getInstance().currentUser?.uid }
     val database = remember { FirebaseDatabase.getInstance().getReference("users") }
     val state by viewModel.shareState.collectAsState()
+
+    val cameraPositionState = rememberCameraPositionState()
+
+    LaunchedEffect(state.myLocation, state.trackedLocation) {
+        state.myLocation?.let { local ->
+            cameraPositionState.animate(
+                update = CameraUpdateFactory.newLatLngZoom(local, 15f),
+                durationMs = 1000
+            )
+        }
+    }
 
     DisposableEffect(trackedUserId) {
         val userRef = FirebaseDatabase.getInstance().getReference("users/$trackedUserId")
@@ -160,7 +172,7 @@ fun sharedLocation(trackedUserId: String, viewModel: ShareViewModel = viewModel(
 
                 GoogleMap(
                     modifier = Modifier.fillMaxSize(),
-                    cameraPositionState = cameraPositionState,
+                    cameraPositionState = cameraPositionState, // 3. Vinculamos el estado reactivo
                     properties = MapProperties(isMyLocationEnabled = false)
                 ) {
                     Marker(
