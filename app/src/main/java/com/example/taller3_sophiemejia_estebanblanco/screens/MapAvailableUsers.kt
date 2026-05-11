@@ -1,2 +1,161 @@
 package com.example.taller3_sophiemejia_estebanblanco.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.location.Location
+import android.os.Looper
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.taller3_sophiemejia_estebanblanco.model.User
+import com.google.android.gms.location.*
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.google.maps.android.compose.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlin.math.roundToInt
+
+data class shareState(
+    val myLocation: LatLng? = null,
+    val trackedLocation: LatLng? = null,
+    val trackedUser: String = "Cargando...",
+    val distanceText: String = "Calculando distancia..."
+)
+
+class ShareViewModel : ViewModel() {
+    private val _shareState = MutableStateFlow(shareState())
+    val shareState: StateFlow<shareState> = _shareState.asStateFlow()
+
+    fun updateMyLocation(newLocation: LatLng?) {
+        _shareState.update { it.copy(myLocation = newLocation) }
+    }
+
+    fun updateTrackedLocation(newLocation: LatLng?) {
+        _shareState.update { it.copy(trackedLocation = newLocation) }
+    }
+
+    fun updateTrackedUser(newName: String) {
+        _shareState.update { it.copy(trackedUser = newName) }
+    }
+
+    fun updateDistanceText(newText: String) {
+        _shareState.update { it.copy(distanceText = newText) }
+    }
+}
+
+@Composable
+fun sharedLocation(trackedUserId: String, viewModel: ShareViewModel = viewModel()) {
+    val context = LocalContext.current
+    val locationProvider = remember { LocationServices.getFusedLocationProviderClient(context) }
+
+    val state by viewModel.shareState.collectAsState()
+
+    DisposableEffect(trackedUserId) {
+        val userRef = FirebaseDatabase.getInstance().getReference("users/$trackedUserId")
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val user = snapshot.getValue(User::class.java)
+                if (user != null) {
+                    viewModel.updateTrackedUser(user.name)
+                    viewModel.updateTrackedLocation(LatLng(user.latitude, user.longitude))
+                }
+            }
+            override fun onCancelled(error: DatabaseError) {}
+        }
+        userRef.addValueEventListener(listener)
+        onDispose { userRef.removeEventListener(listener) }
+    }
+
+    DisposableEffect(Unit) {
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000).build()
+        val locationCallback = object : LocationCallback() {
+            override fun onLocationResult(result: LocationResult) {
+                result.lastLocation?.let {
+                    viewModel.updateMyLocation(LatLng(it.latitude, it.longitude))
+                }
+            }
+        }
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            locationProvider.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+        }
+        onDispose { locationProvider.removeLocationUpdates(locationCallback) }
+    }
+
+    LaunchedEffect(state.myLocation, state.trackedLocation) {
+        if (state.myLocation != null && state.trackedLocation != null) {
+            val results = FloatArray(1)
+            Location.distanceBetween(
+                state.myLocation!!.latitude, state.myLocation!!.longitude,
+                state.trackedLocation!!.latitude, state.trackedLocation!!.longitude,
+                results
+            )
+            val distanceMeters = results[0].roundToInt()
+            val text = if (distanceMeters > 1000) "${distanceMeters / 1000.0} km" else "$distanceMeters m"
+            viewModel.updateDistanceText(text)
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (state.myLocation != null && state.trackedLocation != null) {
+            val cameraPositionState = rememberCameraPositionState {
+                position = CameraPosition.fromLatLngZoom(state.myLocation!!, 14f)
+            }
+
+            GoogleMap(
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = cameraPositionState,
+                properties = MapProperties(isMyLocationEnabled = false)
+            ) {
+                Marker(
+                    state = MarkerState(position = state.myLocation!!),
+                    title = "Tú",
+                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
+                )
+                Marker(
+                    state = MarkerState(position = state.trackedLocation!!),
+                    title = state.trackedUser,
+                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .background(Color.White.copy(alpha = 0.9f), RoundedCornerShape(8.dp))
+                    .padding(16.dp)
+                    .align(Alignment.TopCenter)
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                    Text("Siguiendo a: ${state.trackedUser}", fontWeight = FontWeight.Bold)
+                    Text("Distancia: ${state.distanceText}", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleLarge)
+                }
+            }
+        } else {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        }
+    }
+}

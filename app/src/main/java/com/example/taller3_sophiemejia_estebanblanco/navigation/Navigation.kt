@@ -13,7 +13,8 @@ import com.example.taller3_sophiemejia_estebanblanco.screens.Register
 enum class AppScreens{
     login,
     register,
-    home
+    home,
+    avaliableMap
 }
 
 @Composable
@@ -30,5 +31,6 @@ fun Navigation(){
         composable(route = AppScreens.home.name){
             Home()
         }
+        compo
     }
 }
