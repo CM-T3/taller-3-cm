@@ -22,6 +22,7 @@ import coil.compose.AsyncImage
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -128,7 +129,7 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
                 horizontalAlignment = Alignment.Start
             ) {
                 Spacer(Modifier.height(30.dp))
-                Text("Registro de Usuario", fontSize = 30.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                Text("Registro de Usuario", fontSize = 30.sp, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(20.dp))
 
                 Text("Nombres", fontSize = 20.sp, fontWeight = FontWeight.Bold)
@@ -168,6 +169,7 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
                     value = state.password,
                     onValueChange = { viewModel.updatePassword(it) },
                     modifier = Modifier.fillMaxWidth(),
+                    visualTransformation = PasswordVisualTransformation(),
                     label = { Text("Ingrese su contraseña") })
                 Spacer(Modifier.height(20.dp))
 
@@ -190,7 +192,6 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
                     )
                     Spacer(Modifier.height(16.dp))
 
-                    // Box de la foto
                     Box(
                         modifier = Modifier
                             .size(140.dp)
@@ -271,6 +272,7 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
                             }
                         }
                 }
+                Spacer(Modifier.height(25.dp))      
             }
         }
     }
