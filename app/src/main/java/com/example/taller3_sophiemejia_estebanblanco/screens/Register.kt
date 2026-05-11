@@ -127,8 +127,8 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
                     .padding(16.dp),
                 horizontalAlignment = Alignment.Start
             ) {
-                Spacer(Modifier.height(16.dp))
-                Text("Registro de Usuario", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(30.dp))
+                Text("Registro de Usuario", fontSize = 30.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(20.dp))
 
                 Text("Nombres", fontSize = 20.sp, fontWeight = FontWeight.Bold)

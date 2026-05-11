@@ -86,6 +86,8 @@ fun LogIn(controller: NavController, model : AuthViewModel= viewModel()) {
     Column(verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(20.dp).fillMaxSize()) {
+
+
         Icon(imageVector =  Icons.Default.AccountCircle, contentDescription = "", modifier = Modifier.size(130.dp))
 
         OutlinedTextField(
