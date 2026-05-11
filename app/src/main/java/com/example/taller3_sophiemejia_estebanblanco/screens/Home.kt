@@ -47,7 +47,6 @@ fun Home(navController: NavController) {
             MyBottomBar(navController = navController, indexActual = 0)
         }
     ) { paddingValues ->
-        // Envuelve tu contenido actual en un Box o Column aplicando el paddingValues
         Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
             if (permission.status.isGranted) {
                 LocationWithMapRequest()
