@@ -31,6 +31,6 @@ fun Navigation(){
         composable(route = AppScreens.home.name){
             Home()
         }
-        compo
+
     }
 }
