@@ -1,7 +1,9 @@
 package com.example.taller3_sophiemejia_estebanblanco.screens
 
+import android.content.Context
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
@@ -11,6 +13,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -21,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import coil.compose.AsyncImage
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -31,9 +35,11 @@ import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.taller3_sophiemejia_estebanblanco.R
 import com.example.taller3_sophiemejia_estebanblanco.model.User
 import com.example.taller3_sophiemejia_estebanblanco.navigation.AppScreens
 import com.example.taller3_sophiemejia_estebanblanco.shared.MyButton
+import com.example.taller3_sophiemejia_estebanblanco.shared.validEmailAddress
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.database.FirebaseDatabase
@@ -48,7 +54,12 @@ data class RegisterState(
     val id: String = "",
     val email: String = "",
     val password: String = "",
-    val profilepic: String = ""
+    val profilepic: String = "",
+    val nameError: String = "",
+    val lastnameError: String = "",
+    val idError: String = "",
+    val emailError: String = "",
+    val passwordError: String = ""
 )
 
 class RegisterViewModel : ViewModel() {
@@ -78,6 +89,26 @@ class RegisterViewModel : ViewModel() {
     fun updateProfilePic(newValue: String) {
         _state.update { it.copy(profilepic = newValue) }
     }
+
+    fun updateNameError(newValue: String) {
+        _state.update { it.copy(nameError = newValue) }
+    }
+
+    fun updateLastnameError(newValue: String) {
+        _state.update { it.copy(lastnameError = newValue) }
+    }
+
+    fun updateIdError(newValue: String) {
+        _state.update { it.copy(idError = newValue) }
+    }
+
+    fun updateEmailError(newValue: String) {
+        _state.update { it.copy(emailError = newValue) }
+    }
+
+    fun updatePasswordError(newValue: String) {
+        _state.update { it.copy(passwordError = newValue) }
+    }
 }
 
 @Composable
@@ -87,13 +118,6 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
     val database = FirebaseDatabase.getInstance()
     var uriImage by remember { mutableStateOf<Uri?>(null) }
     val context = LocalContext.current
-
-    val isFormValid = state.name.isNotBlank() &&
-            state.lastname.isNotBlank() &&
-            state.id.isNotBlank() &&
-            state.email.isNotBlank() &&
-            state.password.isNotBlank() &&
-            uriImage != null
 
     val gallery = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
@@ -119,127 +143,167 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
     }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         item {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.Start
-            ) {
-                Spacer(Modifier.height(30.dp))
-                Text("Registro de Usuario", fontSize = 30.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(36.dp))
 
-                Text("Nombres", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(
+                text = "Registro de Usuario", fontSize = 30.sp, fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(36.dp))
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 OutlinedTextField(
                     value = state.name,
                     onValueChange = { viewModel.updateName(it) },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Ingrese su nombre") })
-                Spacer(Modifier.height(16.dp))
+                    label = { Text("Nombres") },
+                    placeholder = { Text("Ingrese su nombre") },
+                    supportingText = {
+                        if (state.nameError.isNotEmpty()) {
+                            Text(state.nameError, color = Color.Red)
+                        }
+                    })
 
-                Text("Apellidos", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 OutlinedTextField(
                     value = state.lastname,
                     onValueChange = { viewModel.updateLastname(it) },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Ingrese su apellido") })
-                Spacer(Modifier.height(16.dp))
+                    label = { Text("Apellidos") },
+                    placeholder = { Text("Ingrese su apellido") },
+                    supportingText = {
+                        if (state.lastnameError.isNotEmpty()) {
+                            Text(state.lastnameError, color = Color.Red)
+                        }
+                    })
 
-                Text("No. de Identificación", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 OutlinedTextField(
                     value = state.id,
                     onValueChange = { viewModel.updateId(it) },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Ingrese su identificación") })
-                Spacer(Modifier.height(16.dp))
+                    label = { Text("No. de Identificación") },
+                    placeholder = { Text("Ingrese su identificación") },
+                    supportingText = {
+                        if (state.idError.isNotEmpty()) {
+                            Text(state.idError, color = Color.Red)
+                        }
+                    })
 
-                Text("Email", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 OutlinedTextField(
                     value = state.email,
                     onValueChange = { viewModel.updateEmail(it) },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Ingrese su email") })
-                Spacer(Modifier.height(16.dp))
+                    label = { Text("Email") },
+                    placeholder = { Text("Ingrese su email") },
+                    supportingText = {
+                        if (state.emailError.isNotEmpty()) {
+                            Text(state.emailError, color = Color.Red)
+                        }
+                    })
 
-                Text("Contraseña", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 OutlinedTextField(
                     value = state.password,
                     onValueChange = { viewModel.updatePassword(it) },
                     modifier = Modifier.fillMaxWidth(),
                     visualTransformation = PasswordVisualTransformation(),
-                    label = { Text("Ingrese su contraseña") })
-                Spacer(Modifier.height(20.dp))
+                    label = { Text("Contraseña") },
+                    placeholder = { Text("Ingrese su contraseña") },
+                    supportingText = {
+                        if (state.passwordError.isNotEmpty()) {
+                            Text(state.passwordError, color = Color.Red)
+                        }
+                    })
+            }
 
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
+            Spacer(modifier = Modifier.height(36.dp))
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Foto de Perfil",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Box(
+                    modifier = Modifier
+                        .size(140.dp)
+                        .clip(CircleShape)
+                        .border(
+                            width = 2.dp,
+                            color = if (uriImage != null) Color.Green else Color.Red,
+                            shape = CircleShape
+                        ), contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "Foto de Perfil (Obligatoria)",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.align(Alignment.Start)
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = "Debes tomarte o seleccionar una foto de perfil donde se vea claramente tu rostro para completar el registro.",
-                        fontSize = 13.sp,
-                        textAlign = TextAlign.Start,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(Modifier.height(16.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .size(140.dp)
-                            .clip(CircleShape)
-                            .border(
-                                width = 2.dp,
-                                color = if (uriImage != null) Color.Green else Color.Red,
-                                shape = CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (uriImage != null) {
-                            AsyncImage(
-                                model = uriImage,
-                                contentDescription = "Foto seleccionada",
-                                modifier = Modifier.fillMaxSize(),
-
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Sin foto",
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(24.dp),
-                                tint = Color.Gray
-                            )
-                        }
-                    }
-
-                    Spacer(Modifier.height(16.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        Button(onClick = { gallery.launch("image/*") }) {
-                            Text("Galería")
-                        }
-                        Button(onClick = { camera.launch(uriCamera) }) {
-                            Text("Cámara")
-                        }
+                    if (uriImage != null) {
+                        AsyncImage(
+                            model = uriImage,
+                            contentDescription = "Foto seleccionada",
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Sin foto",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(24.dp),
+                            tint = Color.Gray
+                        )
                     }
                 }
 
-                Spacer(Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
-                MyButton(text = "Registrarse", enabled = isFormValid) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Button(
+                        onClick = { gallery.launch("image/*") },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonColors(
+                            contentColor = Color.White,
+                            containerColor = colorResource(R.color.azulBonito),
+                            disabledContainerColor = Color.Gray,
+                            disabledContentColor = Color.Gray
+                        )
+                    ) {
+                        Text("Galería")
+                    }
+                    Button(
+                        onClick = { camera.launch(uriCamera) },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonColors(
+                            contentColor = Color.White,
+                            containerColor = colorResource(R.color.azulBonito),
+                            disabledContainerColor = Color.Gray,
+                            disabledContentColor = Color.Gray
+                        )
+                    ) {
+                        Text("Cámara")
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            MyButton(text = "Registrarse") {
+                if (validateForm(viewModel, state, uriImage != null, context)) {
                     auth.createUserWithEmailAndPassword(state.email, state.password)
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
@@ -266,14 +330,77 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
                                             controller.navigate(AppScreens.home.name)
                                         }
                                 }
-
                             } else {
+                                Toast.makeText(
+                                    context, "Error: ${task.exception?.message}", Toast.LENGTH_LONG
+                                ).show()
                                 Log.e("Register", "Error: ${task.exception?.message}")
                             }
                         }
                 }
-                Spacer(Modifier.height(25.dp))
             }
+
+            Spacer(modifier = Modifier.height(36.dp))
         }
     }
+}
+
+fun validateForm(
+    model: RegisterViewModel, state: RegisterState, hasImage: Boolean, context: Context
+): Boolean {
+    if (state.name.isEmpty()) {
+        model.updateNameError("Name is empty")
+        return false
+    } else {
+        model.updateNameError("")
+    }
+
+    if (state.lastname.isEmpty()) {
+        model.updateLastnameError("Lastname is empty")
+        return false
+    } else {
+        model.updateLastnameError("")
+    }
+
+    if (state.id.isEmpty()) {
+        model.updateIdError("ID is empty")
+        return false
+    } else {
+        model.updateIdError("")
+    }
+
+    if (state.email.isEmpty()) {
+        model.updateEmailError("Email is empty")
+        return false
+    } else {
+        model.updateEmailError("")
+    }
+
+    if (!validEmailAddress(state.email)) {
+        model.updateEmailError("Not a valid address")
+        return false
+    } else {
+        model.updateEmailError("")
+    }
+
+    if (state.password.isEmpty()) {
+        model.updatePasswordError("Password is empty")
+        return false
+    } else {
+        model.updatePasswordError("")
+    }
+
+    if (state.password.length < 6) {
+        model.updatePasswordError("Password is too short")
+        return false
+    } else {
+        model.updatePasswordError("")
+    }
+
+    if (!hasImage) {
+        Toast.makeText(context, "Profile picture is required", Toast.LENGTH_SHORT).show()
+        return false
+    }
+
+    return true
 }

@@ -104,16 +104,13 @@ fun LogIn(controller: NavController, model: AuthViewModel = viewModel()) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Inicio de Sesión",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold
+            text = "Inicio de Sesión", fontSize = 28.sp, fontWeight = FontWeight.Bold
         )
 
         Spacer(modifier = Modifier.height(36.dp))
 
         Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             OutlinedTextField(
                 value = state.email,
@@ -125,8 +122,7 @@ fun LogIn(controller: NavController, model: AuthViewModel = viewModel()) {
                     if (state.emailError.isNotEmpty()) {
                         Text(state.emailError, color = Color.Red)
                     }
-                }
-            )
+                })
 
             OutlinedTextField(
                 value = state.password,
@@ -139,8 +135,7 @@ fun LogIn(controller: NavController, model: AuthViewModel = viewModel()) {
                     if (state.passwordError.isNotEmpty()) {
                         Text(state.passwordError, color = Color.Red)
                     }
-                }
-            )
+                })
         }
         Spacer(modifier = Modifier.height(36.dp))
 
@@ -149,20 +144,22 @@ fun LogIn(controller: NavController, model: AuthViewModel = viewModel()) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            MyButton("Login") {
+            MyButton("Iniciar Sesión") {
                 if (validateForm(model, state.email, state.password)) {
                     auth.signInWithEmailAndPassword(state.email, state.password)
                         .addOnCompleteListener {
                             if (it.isSuccessful) {
                                 controller.navigate(AppScreens.home.name)
                             } else {
-                                makeText(context, "Authentication failed", Toast.LENGTH_SHORT).show()
+                                makeText(
+                                    context, "Fallo en la autenticación", Toast.LENGTH_SHORT
+                                ).show()
                             }
                         }
                 }
             }
 
-            MyButton("Register") {
+            MyButton("Registrarse") {
                 controller.navigate(AppScreens.register.name)
             }
         }
