@@ -272,7 +272,7 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
                             }
                         }
                 }
-                Spacer(Modifier.height(25.dp))      
+                Spacer(Modifier.height(25.dp))
             }
         }
     }
