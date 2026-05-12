@@ -61,7 +61,7 @@ fun MyBottomBar(navController: NavController, indexActual: Int) {
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = Color.Black,
+        color = colorResource(R.color.azulBonito),
         contentColor = Color.White,
         shadowElevation = 8.dp
     ) {
@@ -77,12 +77,7 @@ fun MyBottomBar(navController: NavController, indexActual: Int) {
                     if (indexActual != 0) {
                         navController.navigate(AppScreens.home.name)
                     }
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = Color.DarkGray,
-                    selectedIconColor = Color.White,
-                    unselectedIconColor = Color.Gray
-                )
+                }
             )
 
             NavigationBarItem(
@@ -97,12 +92,7 @@ fun MyBottomBar(navController: NavController, indexActual: Int) {
                     if (indexActual != 1) {
                         navController.navigate(AppScreens.availableUsers.name)
                     }
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = Color.DarkGray,
-                    selectedIconColor = Color.White,
-                    unselectedIconColor = Color.Gray
-                )
+                }
             )
 
             NavigationBarItem(

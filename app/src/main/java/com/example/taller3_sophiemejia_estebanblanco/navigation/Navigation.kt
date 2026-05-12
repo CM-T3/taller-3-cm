@@ -25,6 +25,7 @@ fun Navigation(){
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = AppScreens.login.name){
         composable(route = AppScreens.login.name){
+
             LogIn(navController)
         }
         composable(route = AppScreens.register.name){

@@ -10,7 +10,11 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import com.example.taller3_sophiemejia_estebanblanco.R
+
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.taller3_sophiemejia_estebanblanco.auth
@@ -94,7 +98,15 @@ fun AvailableUsers(navController: NavController) {
                             actUserId?.let { uid ->
                                 database.child(uid).child("available").setValue(checked)
                             }
-                        }
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = colorResource(R.color.azulBonito),
+                            uncheckedThumbColor = Color.DarkGray,
+                            uncheckedTrackColor = Color.LightGray,
+                            checkedBorderColor = Color.Transparent,
+                            uncheckedBorderColor = Color.Gray
+                        )
                     )
                 }
             }
@@ -109,7 +121,7 @@ fun AvailableUsers(navController: NavController) {
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(20.dp)) {
                                 Icon(
                                     imageVector = Icons.Default.Person,
                                     contentDescription = "Perfil",
@@ -120,7 +132,8 @@ fun AvailableUsers(navController: NavController) {
                             }
 
                             MyButton("Ver") {
-                                navController.navigate("${AppScreens.availableMap.name}/$userId")                            }
+                                navController.navigate("${AppScreens.availableMap.name}/$userId")
+                            }
                         }
                     }
                 }

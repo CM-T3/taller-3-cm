@@ -11,6 +11,8 @@ import com.google.firebase.auth.FirebaseAuth
 lateinit var auth : FirebaseAuth
 lateinit var geocoder: Geocoder
 
+
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
