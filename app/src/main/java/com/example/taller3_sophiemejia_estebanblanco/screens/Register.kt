@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -64,6 +65,8 @@ data class RegisterState(
 )
 
 class RegisterViewModel : ViewModel() {
+
+
     private val _state = MutableStateFlow(RegisterState())
     val state = _state.asStateFlow()
 
@@ -119,6 +122,7 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
     val database = FirebaseDatabase.getInstance()
     var uriImage by remember { mutableStateOf<Uri?>(null) }
     val context = LocalContext.current
+    var isLoading by remember { mutableStateOf(false) }
 
     val gallery = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
@@ -166,6 +170,7 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
                     value = state.name,
                     onValueChange = { viewModel.updateName(it) },
                     modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading,
                     label = { Text("Nombres") },
                     placeholder = { Text("Ingrese su nombre") },
                     supportingText = {
@@ -178,6 +183,7 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
                     value = state.lastname,
                     onValueChange = { viewModel.updateLastname(it) },
                     modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading,
                     label = { Text("Apellidos") },
                     placeholder = { Text("Ingrese su apellido") },
                     supportingText = {
@@ -190,6 +196,7 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
                     value = state.id,
                     onValueChange = { viewModel.updateId(it) },
                     modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading,
                     label = { Text("No. de Identificación") },
                     placeholder = { Text("Ingrese su identificación") },
                     supportingText = {
@@ -202,6 +209,7 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
                     value = state.email,
                     onValueChange = { viewModel.updateEmail(it) },
                     modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading,
                     label = { Text("Email") },
                     placeholder = { Text("Ingrese su email") },
                     supportingText = {
@@ -214,6 +222,7 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
                     value = state.password,
                     onValueChange = { viewModel.updatePassword(it) },
                     modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading,
                     visualTransformation = PasswordVisualTransformation(),
                     label = { Text("Contraseña") },
                     placeholder = { Text("Ingrese su contraseña") },
@@ -277,6 +286,7 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
                     Button(
                         onClick = { gallery.launch("image/*") },
                         modifier = Modifier.weight(1f),
+                        enabled = !isLoading,
                         colors = ButtonColors(
                             contentColor = Color.White,
                             containerColor = colorResource(R.color.azulBonito),
@@ -289,6 +299,7 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
                     Button(
                         onClick = { camera.launch(uriCamera) },
                         modifier = Modifier.weight(1f),
+                        enabled = !isLoading,
                         colors = ButtonColors(
                             contentColor = Color.White,
                             containerColor = colorResource(R.color.azulBonito),
@@ -303,8 +314,12 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            MyButton(text = "Registrarse") {
+            MyButton(
+                text = "Registrarse",
+                enabled = !isLoading
+            ) {
                 if (validateForm(viewModel, state, uriImage != null, context)) {
+                    isLoading = true
                     auth.createUserWithEmailAndPassword(state.email, state.password)
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
@@ -336,17 +351,27 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
                                                     )
 
                                                     database.getReference("users/${user.uid}")
-                                                        .setValue(nuevoUsuario).addOnCompleteListener {
-                                                            controller.navigate(AppScreens.home.name)
+                                                        .setValue(nuevoUsuario).addOnCompleteListener { finalTask ->
+                                                            if (finalTask.isSuccessful) {
+                                                                controller.navigate(AppScreens.home.name)
+                                                            } else {
+                                                                isLoading = false
+                                                                Toast.makeText(context, "Error al guardar datos", Toast.LENGTH_SHORT).show()
+                                                            }
                                                         }
+                                                }.addOnFailureListener {
+                                                    isLoading = false
+                                                    Toast.makeText(context, "Error al obtener URL", Toast.LENGTH_SHORT).show()
                                                 }
                                             }
                                             .addOnFailureListener { exception ->
+                                                isLoading = false
                                                 Toast.makeText(context, "Error al subir imagen: ${exception.message}", Toast.LENGTH_SHORT).show()
                                             }
                                     }
                                 }
                             } else {
+                                isLoading = false
                                 Toast.makeText(
                                     context, "Error Auth: ${task.exception?.message}", Toast.LENGTH_LONG
                                 ).show()
@@ -354,6 +379,15 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
                             }
                         }
                 }
+            }
+
+            if (isLoading) {
+                Spacer(modifier = Modifier.height(24.dp))
+                CircularProgressIndicator(
+                    color = colorResource(R.color.azulBonito),
+                    modifier = Modifier.size(40.dp),
+                    strokeWidth = 4.dp
+                )
             }
 
             Spacer(modifier = Modifier.height(36.dp))
