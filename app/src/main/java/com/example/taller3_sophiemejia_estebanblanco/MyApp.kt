@@ -39,7 +39,6 @@ fun showNotification(title: String, message: String, context: Context, targetUse
     val notification: Notification
 
     if (targetUserId != null) {
-        // Preparamos el Intent para abrir MainActivity enviándole el ID del usuario [cite: 366, 370]
         val intent = Intent(context, MainActivity::class.java).apply {
             putExtra("targetUserId", targetUserId)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -51,7 +50,7 @@ fun showNotification(title: String, message: String, context: Context, targetUse
             .setContentText(message)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setAutoCancel(true)
-            .setContentIntent(pendingIntent) // Al tocar, ejecuta el PendingIntent [cite: 372, 377]
+            .setContentIntent(pendingIntent)
             .build()
     } else {
         notification = NotificationCompat.Builder(context, MyApp.NOTIFICATION_CHANNEL_ID)

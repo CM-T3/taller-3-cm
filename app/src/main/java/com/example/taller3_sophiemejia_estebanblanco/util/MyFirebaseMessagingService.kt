@@ -13,7 +13,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val title = remoteMessage.notification?.title
         val body = remoteMessage.notification?.body
 
-        // Extraemos el ID que mandamos desde el código de la nube en "data"
         val userId = remoteMessage.data["targetUserId"]
 
         if (title != null && body != null) {

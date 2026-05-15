@@ -1,13 +1,13 @@
 package com.example.taller3_sophiemejia_estebanblanco.screens
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Looper
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -41,7 +41,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlin.math.roundToInt
 
-
 data class shareState(
     val myLocation: LatLng? = null,
     val trackedLocation: LatLng? = null,
@@ -70,6 +69,7 @@ class ShareViewModel : ViewModel() {
     }
 }
 
+@SuppressLint("MissingPermission")
 @Composable
 fun sharedLocation(trackedUserId: String, viewModel: ShareViewModel = viewModel(), navController: NavController) {
     val context = LocalContext.current
@@ -78,7 +78,10 @@ fun sharedLocation(trackedUserId: String, viewModel: ShareViewModel = viewModel(
     val database = remember { FirebaseDatabase.getInstance().getReference("users") }
     val state by viewModel.shareState.collectAsState()
 
-    val cameraPositionState = rememberCameraPositionState()
+    val bogota = LatLng(4.6288, -74.0640)
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(bogota, 12f)
+    }
 
     LaunchedEffect(state.myLocation, state.trackedLocation) {
         state.myLocation?.let { local ->
@@ -86,6 +89,19 @@ fun sharedLocation(trackedUserId: String, viewModel: ShareViewModel = viewModel(
                 update = CameraUpdateFactory.newLatLngZoom(local, 15f),
                 durationMs = 1000
             )
+        }
+
+        if (state.myLocation != null && state.trackedLocation != null) {
+            val results = FloatArray(1)
+            Location.distanceBetween(
+                state.myLocation!!.latitude, state.myLocation!!.longitude,
+                state.trackedLocation!!.latitude, state.trackedLocation!!.longitude,
+                results
+            )
+            val distanceMeters = results[0].roundToInt()
+            val text =
+                if (distanceMeters > 1000) "${distanceMeters / 1000.0} km" else "$distanceMeters m"
+            viewModel.updateDistanceText(text)
         }
     }
 
@@ -107,11 +123,13 @@ fun sharedLocation(trackedUserId: String, viewModel: ShareViewModel = viewModel(
     }
 
     DisposableEffect(Unit) {
-        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000).build()
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000)
+            .setMinUpdateDistanceMeters(10f)
+            .build()
+
         val locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 val location = result.lastLocation
-
                 if (location != null) {
                     viewModel.updateMyLocation(LatLng(location.latitude, location.longitude))
 
@@ -125,34 +143,21 @@ fun sharedLocation(trackedUserId: String, viewModel: ShareViewModel = viewModel(
                 }
             }
         }
-        if (ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            locationProvider.requestLocationUpdates(
-                locationRequest,
-                locationCallback,
-                Looper.getMainLooper()
-            )
+
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            locationProvider.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+
+            locationProvider.lastLocation.addOnSuccessListener { loc ->
+                loc?.let {
+                    val initialLoc = LatLng(it.latitude, it.longitude)
+                    viewModel.updateMyLocation(initialLoc)
+                    cameraPositionState.position = CameraPosition.fromLatLngZoom(initialLoc, 15f)
+                }
+            }
         }
         onDispose { locationProvider.removeLocationUpdates(locationCallback) }
     }
 
-    LaunchedEffect(state.myLocation, state.trackedLocation) {
-        if (state.myLocation != null && state.trackedLocation != null) {
-            val results = FloatArray(1)
-            Location.distanceBetween(
-                state.myLocation!!.latitude, state.myLocation!!.longitude,
-                state.trackedLocation!!.latitude, state.trackedLocation!!.longitude,
-                results
-            )
-            val distanceMeters = results[0].roundToInt()
-            val text =
-                if (distanceMeters > 1000) "${distanceMeters / 1000.0} km" else "$distanceMeters m"
-            viewModel.updateDistanceText(text)
-        }
-    }
     Scaffold(
         bottomBar = {
             MyBottomBar(navController = navController, indexActual = 1)
@@ -164,29 +169,28 @@ fun sharedLocation(trackedUserId: String, viewModel: ShareViewModel = viewModel(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-
-            if (state.myLocation != null && state.trackedLocation != null) {
-                val cameraPositionState = rememberCameraPositionState {
-                    position = CameraPosition.fromLatLngZoom(state.myLocation!!, 14f)
-                }
-
-                GoogleMap(
-                    modifier = Modifier.fillMaxSize(),
-                    cameraPositionState = cameraPositionState, // 3. Vinculamos el estado reactivo
-                    properties = MapProperties(isMyLocationEnabled = false)
-                ) {
+            GoogleMap(
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = cameraPositionState,
+                properties = MapProperties(isMyLocationEnabled = false)
+            ) {
+                state.myLocation?.let {
                     Marker(
-                        state = MarkerState(position = state.myLocation!!),
+                        state = MarkerState(position = it),
                         title = "Tú",
                         icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
                     )
+                }
+                state.trackedLocation?.let {
                     Marker(
-                        state = MarkerState(position = state.trackedLocation!!),
+                        state = MarkerState(position = it),
                         title = state.trackedUser,
                         icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
                     )
                 }
+            }
 
+            if (state.myLocation != null && state.trackedLocation != null) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -206,10 +210,6 @@ fun sharedLocation(trackedUserId: String, viewModel: ShareViewModel = viewModel(
                             style = MaterialTheme.typography.titleLarge
                         )
                     }
-                }
-            } else {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
                 }
             }
         }

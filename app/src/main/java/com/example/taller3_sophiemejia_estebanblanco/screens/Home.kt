@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
@@ -18,6 +19,7 @@ import com.example.taller3_sophiemejia_estebanblanco.shared.MyBottomBar
 import com.example.taller3_sophiemejia_estebanblanco.util.readJsonPos
 import com.google.accompanist.permissions.*
 import com.google.android.gms.location.*
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -30,18 +32,9 @@ import com.google.firebase.database.FirebaseDatabase
 fun Home(navController: NavController) {
     val locationPermission = Manifest.permission.ACCESS_FINE_LOCATION
     val permission = rememberPermissionState(locationPermission)
-    var showButton by remember { mutableStateOf(false) }
 
-    SideEffect {
-        if (!permission.status.isGranted) {
-            if (permission.status.shouldShowRationale) {
-                showButton = true
-            } else {
-                showButton = false
-                permission.launchPermissionRequest()
-            }
-        }
-    }
+    var hasRequested by remember { mutableStateOf(false) }
+
     Scaffold(
         bottomBar = {
             MyBottomBar(navController = navController, indexActual = 0)
@@ -51,28 +44,44 @@ fun Home(navController: NavController) {
             if (permission.status.isGranted) {
                 LocationWithMapRequest()
             } else {
-
                 Column(
-                    modifier = Modifier.fillMaxSize().padding(15.dp),
+                    modifier = Modifier.fillMaxSize().padding(24.dp),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    if (showButton) {
-                        Text("Se requiere acceder a gps")
-                        Button(onClick = { permission.launchPermissionRequest() }) {
-                            Text("Pedir permiso de localizacion")
+                    if (!hasRequested && !permission.status.shouldShowRationale) {
+                        Button(onClick = {
+                            hasRequested = true
+                            permission.launchPermissionRequest()
+                        }) {
+                            Text("Pedir permiso de localización")
                         }
+                    } else if (permission.status.shouldShowRationale) {
+                        Button(onClick = {
+                            permission.launchPermissionRequest()
+                        }) {
+                            Text("Pedir permiso de localización")
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Es importante acceder a tu ubicación para calcular las distancias y mostrar tu posición actual en el mapa respecto a los puntos de interés.",
+                            textAlign = TextAlign.Center
+                        )
                     } else {
-                        Text("NO hay acceso")
+                        Button(onClick = { }, enabled = false) {
+                            Text("Permiso denegado")
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Para otorgar permisos ir directamente a la info de la app en sus configuraciones.",
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
             }
         }
     }
 }
-
-
-
 
 @Composable
 fun LocationWithMapRequest() {
@@ -106,66 +115,64 @@ fun LocationWithMapRequest() {
     }
 
     DisposableEffect(Unit) {
-        if(ContextCompat.checkSelfPermission(context, locationPermission)== PackageManager.PERMISSION_GRANTED) {
+        if(ContextCompat.checkSelfPermission(context, locationPermission) == PackageManager.PERMISSION_GRANTED) {
             locationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
         }
-        onDispose {locationClient.removeLocationUpdates(locationCallback)}
+        onDispose { locationClient.removeLocationUpdates(locationCallback) }
     }
 
-    if (latitude != 0.0 && longitude != 0.0) {
-        val currentLocation = LatLng(latitude, longitude)
-        val cameraPositionState = rememberCameraPositionState {
-            position = CameraPosition.fromLatLngZoom(currentLocation, 15f)
+    val defaultLocation = LatLng(4.6288, -74.0640)
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(defaultLocation, 12f)
+    }
+
+    LaunchedEffect(latitude, longitude) {
+        if (latitude != 0.0 && longitude != 0.0) {
+            cameraPositionState.animate(
+                update = CameraUpdateFactory.newLatLngZoom(LatLng(latitude, longitude), 15f),
+                durationMs = 1000
+            )
         }
+    }
 
-
-        GoogleMap(
-            modifier = Modifier.fillMaxSize(),
-            cameraPositionState = cameraPositionState,
-            properties = MapProperties(isMyLocationEnabled = false)
-        ) {
+    GoogleMap(
+        modifier = Modifier.fillMaxSize(),
+        cameraPositionState = cameraPositionState,
+        properties = MapProperties(isMyLocationEnabled = false)
+    ) {
+        if (latitude != 0.0 && longitude != 0.0) {
             Marker(
-                state = MarkerState(position = currentLocation),
+                state = MarkerState(position = LatLng(latitude, longitude)),
                 title = "Tu ubicación",
                 icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
             )
-
-            val jsonPois = readJsonPos(context)
-            jsonPois.forEach { it ->
-                Marker(
-                    state = MarkerState(position = it.location),
-                    title = it.name
-                )
-            }
         }
 
 
-
-    } else {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Calculando GPS...")
+        val jsonPois = remember { readJsonPos(context) }
+        jsonPois.forEach { it ->
+            Marker(
+                state = MarkerState(position = it.location),
+                title = it.name
+            )
         }
     }
 }
 
-
 fun createLocationRequest(): LocationRequest {
-    val locationRequest = LocationRequest.Builder(
+    return LocationRequest.Builder(
         Priority.PRIORITY_HIGH_ACCURACY, 10000
     )
         .setWaitForAccurateLocation(true)
         .setMinUpdateIntervalMillis(5000)
         .build()
-
-    return locationRequest
 }
 
 fun createLocationCallback(onLocationChange: (LocationResult) -> Unit): LocationCallback {
-    val callback = object : LocationCallback() {
+    return object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
             super.onLocationResult(locationResult)
             onLocationChange(locationResult)
         }
     }
-    return callback
 }
