@@ -47,6 +47,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.io.File
+import com.google.firebase.storage.FirebaseStorage
 
 data class RegisterState(
     val name: String = "",
@@ -312,27 +313,46 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
                                     val profileUpdates = UserProfileChangeRequest.Builder()
                                         .setDisplayName("${state.name} ${state.lastname}").build()
                                     user.updateProfile(profileUpdates)
+                                    val storageRef =
+                                        FirebaseStorage.getInstance().reference.child("images/profile/${user.uid}/image.jpg")
 
-                                    val nuevoUsuario = User(
-                                        name = state.name,
-                                        lastname = state.lastname,
-                                        id = state.id,
-                                        email = state.email,
-                                        password = state.password,
-                                        latitude = 0.0,
-                                        longitude = 0.0,
-                                        available = false,
-                                        profilepic = state.profilepic
-                                    )
+                                    uriImage?.let { uri ->
+                                        storageRef.putFile(uri)
+                                            .addOnSuccessListener { taskSnapshot ->
+                                                taskSnapshot.storage.downloadUrl.addOnSuccessListener { downloadUrl ->
 
-                                    database.getReference("users/${user.uid}")
-                                        .setValue(nuevoUsuario).addOnCompleteListener {
-                                            controller.navigate(AppScreens.home.name)
-                                        }
+                                                    val nuevoUsuario = User(
+                                                        name = state.name,
+                                                        lastname = state.lastname,
+                                                        id = state.id,
+                                                        email = state.email,
+                                                        password = state.password,
+                                                        latitude = 0.0,
+                                                        longitude = 0.0,
+                                                        available = false,
+                                                        profilepic = downloadUrl.toString()
+                                                    )
+
+                                                    database.getReference("users/${user.uid}")
+                                                        .setValue(nuevoUsuario)
+                                                        .addOnCompleteListener {
+                                                            controller.navigate(AppScreens.home.name)
+                                                        }
+                                                }
+                                            }.addOnFailureListener { exception ->
+                                                Toast.makeText(
+                                                    context,
+                                                    "Error al subir imagen: ${exception.message}",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                    }
                                 }
                             } else {
                                 Toast.makeText(
-                                    context, "Error: ${task.exception?.message}", Toast.LENGTH_LONG
+                                    context,
+                                    "Error Auth: ${task.exception?.message}",
+                                    Toast.LENGTH_LONG
                                 ).show()
                                 Log.e("Register", "Error: ${task.exception?.message}")
                             }

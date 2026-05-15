@@ -12,7 +12,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import com.example.taller3_sophiemejia_estebanblanco.R
-
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
@@ -27,6 +29,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import coil.compose.AsyncImage
 
 @Composable
 fun AvailableUsers(navController: NavController) {
@@ -58,6 +61,7 @@ fun AvailableUsers(navController: NavController) {
                 }
                 userList = users
             }
+
             override fun onCancelled(error: DatabaseError) {}
         }
         database.addValueEventListener(listener)
@@ -67,8 +71,7 @@ fun AvailableUsers(navController: NavController) {
     Scaffold(
         bottomBar = {
             MyBottomBar(navController = navController, indexActual = 1)
-        }
-    ) { paddingValues ->
+        }) { paddingValues ->
 
         Column(
             modifier = Modifier
@@ -84,22 +87,22 @@ fun AvailableUsers(navController: NavController) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Usuarios Disponibles",
-                    style = MaterialTheme.typography.titleLarge
+                    text = "Usuarios Disponibles", style = MaterialTheme.typography.titleLarge
                 )
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(if (isMeAvailable) "Disponible" else "Oculto", style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        if (isMeAvailable) "Disponible" else "Oculto",
+                        style = MaterialTheme.typography.bodySmall
+                    )
                     Spacer(Modifier.width(8.dp))
                     Switch(
-                        checked = isMeAvailable,
-                        onCheckedChange = { checked ->
+                        checked = isMeAvailable, onCheckedChange = { checked ->
                             isMeAvailable = checked
                             actUserId?.let { uid ->
                                 database.child(uid).child("available").setValue(checked)
                             }
-                        },
-                        colors = SwitchDefaults.colors(
+                        }, colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
                             checkedTrackColor = colorResource(R.color.azulBonito),
                             uncheckedThumbColor = Color.DarkGray,
@@ -121,11 +124,17 @@ fun AvailableUsers(navController: NavController) {
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(20.dp)) {
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = "Perfil",
-                                    modifier = Modifier.size(40.dp)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(20.dp)
+                            ) {
+                                AsyncImage(
+                                    model = user.profilepic,
+                                    contentDescription = "Foto de perfil de ${user.name}",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(CircleShape)
                                 )
                                 Spacer(modifier = Modifier.width(16.dp))
                                 Text(text = "${user.name} ${user.lastname}")
