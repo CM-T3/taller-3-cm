@@ -310,11 +310,13 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
                             if (task.isSuccessful) {
                                 val firebaseUser = auth.currentUser
                                 firebaseUser?.let { user ->
+
                                     val profileUpdates = UserProfileChangeRequest.Builder()
                                         .setDisplayName("${state.name} ${state.lastname}").build()
                                     user.updateProfile(profileUpdates)
-                                    val storageRef =
-                                        FirebaseStorage.getInstance().reference.child("images/profile/${user.uid}/image.jpg")
+
+                                    val storageRef = FirebaseStorage.getInstance().reference
+                                        .child("images/profile/${user.uid}/image.jpg")
 
                                     uriImage?.let { uri ->
                                         storageRef.putFile(uri)
@@ -334,25 +336,19 @@ fun Register(controller: NavController, viewModel: RegisterViewModel = viewModel
                                                     )
 
                                                     database.getReference("users/${user.uid}")
-                                                        .setValue(nuevoUsuario)
-                                                        .addOnCompleteListener {
+                                                        .setValue(nuevoUsuario).addOnCompleteListener {
                                                             controller.navigate(AppScreens.home.name)
                                                         }
                                                 }
-                                            }.addOnFailureListener { exception ->
-                                                Toast.makeText(
-                                                    context,
-                                                    "Error al subir imagen: ${exception.message}",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
+                                            }
+                                            .addOnFailureListener { exception ->
+                                                Toast.makeText(context, "Error al subir imagen: ${exception.message}", Toast.LENGTH_SHORT).show()
                                             }
                                     }
                                 }
                             } else {
                                 Toast.makeText(
-                                    context,
-                                    "Error Auth: ${task.exception?.message}",
-                                    Toast.LENGTH_LONG
+                                    context, "Error Auth: ${task.exception?.message}", Toast.LENGTH_LONG
                                 ).show()
                                 Log.e("Register", "Error: ${task.exception?.message}")
                             }

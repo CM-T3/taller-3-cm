@@ -17,7 +17,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.taller3_sophiemejia_estebanblanco.auth
 import com.example.taller3_sophiemejia_estebanblanco.model.User
@@ -30,6 +32,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import coil.compose.AsyncImage
+
 
 @Composable
 fun AvailableUsers(navController: NavController) {
@@ -86,14 +89,17 @@ fun AvailableUsers(navController: NavController) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
+
                 Text(
-                    text = "Usuarios Disponibles", style = MaterialTheme.typography.titleLarge
+                    text = "Usuarios Disponibles",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
                 )
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        if (isMeAvailable) "Disponible" else "Oculto",
-                        style = MaterialTheme.typography.bodySmall
+                        text = if (isMeAvailable) "Disponible" else "Oculto",
+                        fontSize = 13.sp
                     )
                     Spacer(Modifier.width(8.dp))
                     Switch(
@@ -116,32 +122,46 @@ fun AvailableUsers(navController: NavController) {
 
             LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 items(userList) { (userId, user) ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation()) {
                         Row(
                             modifier = Modifier
-                                .padding(16.dp)
-                                .fillMaxWidth(),
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(20.dp)
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 AsyncImage(
                                     model = user.profilepic,
                                     contentDescription = "Foto de perfil de ${user.name}",
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier
-                                        .size(40.dp)
+                                        .size(70.dp)
                                         .clip(CircleShape)
                                 )
                                 Spacer(modifier = Modifier.width(16.dp))
-                                Text(text = "${user.name} ${user.lastname}")
+
+                                Text(
+                                    text = "${user.name} ${user.lastname}",
+                                    fontSize = 16.sp
+                                )
                             }
 
-                            MyButton("Ver") {
-                                navController.navigate("${AppScreens.availableMap.name}/$userId")
+                            Button(
+                                onClick = { navController.navigate("${AppScreens.availableMap.name}/$userId") },
+                                modifier = Modifier
+                                    .width(90.dp)
+                                    .height(40.dp),
+                                contentPadding = PaddingValues(0.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colorResource(R.color.azulBonito),
+                                    contentColor = Color.White
+                                )
+                            ) {
+
+                                Text(text = "Ver", fontSize = 14.sp)
                             }
                         }
                     }
