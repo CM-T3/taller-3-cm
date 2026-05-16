@@ -1,9 +1,7 @@
 package com.example.taller3_sophiemejia_estebanblanco
 
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.location.Geocoder
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,14 +10,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
-import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
 import com.example.taller3_sophiemejia_estebanblanco.navigation.AppScreens
 import com.example.taller3_sophiemejia_estebanblanco.navigation.Navigation
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.messaging.FirebaseMessaging
 
-lateinit var auth : FirebaseAuth
+lateinit var auth: FirebaseAuth
 lateinit var geocoder: Geocoder
 
 class MainActivity : ComponentActivity() {
@@ -37,11 +35,7 @@ class MainActivity : ComponentActivity() {
 
         targetUserIdState.value = intent.getStringExtra("targetUserId")
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-            }
-        }
+
 
         enableEdgeToEdge()
 
@@ -50,29 +44,45 @@ class MainActivity : ComponentActivity() {
             val targetUserId by targetUserIdState
 
             LaunchedEffect(Unit) {
-                FirebaseMessaging.getInstance().subscribeToTopic("available_users")
+                val uid = auth.currentUser?.uid ?: return@LaunchedEffect
+                FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+                    FirebaseDatabase.getInstance()
+                        .getReference("users/$uid/fcmToken")
+                        .setValue(token)
+                }
             }
 
             LaunchedEffect(targetUserId) {
-                if (targetUserId != null) {
-                    if (auth.currentUser != null) {
-                        navController.navigate("${AppScreens.availableMap.name}/$targetUserId")
-                    } else {
-                        navController.navigate(AppScreens.login.name)
-                    }
+                val userId = targetUserId ?: return@LaunchedEffect
+                if (auth.currentUser == null) {
                     targetUserIdState.value = null
+                    return@LaunchedEffect
                 }
+                navController.addOnDestinationChangedListener(
+                    object : androidx.navigation.NavController.OnDestinationChangedListener {
+                        override fun onDestinationChanged(
+                            controller: androidx.navigation.NavController,
+                            destination: androidx.navigation.NavDestination,
+                            arguments: android.os.Bundle?
+                        ) {
+
+                            controller.removeOnDestinationChangedListener(this)
+                            controller.navigate("${AppScreens.availableMap.name}/$userId") {
+                                launchSingleTop = true
+                            }
+                            targetUserIdState.value = null
+                        }
+                    }
+                )
             }
 
             Navigation(navController)
         }
     }
 
-
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-
         targetUserIdState.value = intent.getStringExtra("targetUserId")
     }
 }

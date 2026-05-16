@@ -41,9 +41,15 @@ fun showNotification(title: String, message: String, context: Context, targetUse
     if (targetUserId != null) {
         val intent = Intent(context, MainActivity::class.java).apply {
             putExtra("targetUserId", targetUserId)
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
-        val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            targetUserId.hashCode(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
         notification = NotificationCompat.Builder(context, MyApp.NOTIFICATION_CHANNEL_ID)
             .setContentTitle(title)
@@ -51,6 +57,7 @@ fun showNotification(title: String, message: String, context: Context, targetUse
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
     } else {
         notification = NotificationCompat.Builder(context, MyApp.NOTIFICATION_CHANNEL_ID)
@@ -58,7 +65,9 @@ fun showNotification(title: String, message: String, context: Context, targetUse
             .setContentText(message)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
     }
-    notManager?.notify(1, notification)
+
+    notManager?.notify(targetUserId?.hashCode() ?: 1, notification)
 }
