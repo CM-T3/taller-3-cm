@@ -15,6 +15,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
+import androidx.activity.compose.BackHandler
 import com.example.taller3_sophiemejia_estebanblanco.shared.MyBottomBar
 import com.example.taller3_sophiemejia_estebanblanco.util.readJsonPos
 import com.google.accompanist.permissions.*
@@ -30,6 +31,7 @@ import com.google.firebase.database.FirebaseDatabase
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun Home(navController: NavController) {
+    BackHandler { }
     val locationPermission = Manifest.permission.ACCESS_FINE_LOCATION
     val permission = rememberPermissionState(locationPermission)
 
