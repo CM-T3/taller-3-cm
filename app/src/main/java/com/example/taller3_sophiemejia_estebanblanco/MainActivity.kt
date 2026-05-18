@@ -1,7 +1,6 @@
 package com.example.taller3_sophiemejia_estebanblanco
 
 import android.content.Intent
-import android.location.Geocoder
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,26 +17,17 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.messaging.FirebaseMessaging
 
 lateinit var auth: FirebaseAuth
-lateinit var geocoder: Geocoder
 
 class MainActivity : ComponentActivity() {
-
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) {}
 
     private val targetUserIdState = mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        geocoder = Geocoder(this)
         auth = FirebaseAuth.getInstance()
 
         targetUserIdState.value = intent.getStringExtra("targetUserId")
 
-
-
-        enableEdgeToEdge()
 
         setContent {
             val navController = rememberNavController()

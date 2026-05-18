@@ -132,7 +132,7 @@ fun LocationWithMapRequest() {
         if (latitude != 0.0 && longitude != 0.0) {
             cameraPositionState.animate(
                 update = CameraUpdateFactory.newLatLngZoom(LatLng(latitude, longitude), 15f),
-                durationMs = 1000
+                durationMs = 2000
             )
         }
     }

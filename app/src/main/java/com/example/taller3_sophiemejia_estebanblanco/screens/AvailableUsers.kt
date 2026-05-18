@@ -88,7 +88,7 @@ fun AvailableUsers(navController: NavController) {
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Las notificaciones son necesarias para avisarte cuando otro usuario se marca como disponible, incluso si la aplicación está cerrada.",
+                            text = "Las notificaciones son necesarias para avisarte cuando otro usuario se marca como disponible.",
                             textAlign = TextAlign.Center
                         )
                     } else {
@@ -97,7 +97,7 @@ fun AvailableUsers(navController: NavController) {
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Para recibir notificaciones ve a Configuración del teléfono → Info de la app → Permisos → Notificaciones y actívalas manualmente.",
+                            text = "Para recibir notificaciones ve a Configuración del teléfono -> Info de la app -> Permisos -> Notificaciones y actívalas manualmente.",
                             textAlign = TextAlign.Center
                         )
                     }
@@ -156,7 +156,7 @@ private fun AvailableUsersContent(navController: NavController) {
         ) {
             Text(
                 text = "Usuarios Disponibles",
-                fontSize = 24.sp,
+                fontSize = 19.sp,
                 fontWeight = FontWeight.Bold
             )
 

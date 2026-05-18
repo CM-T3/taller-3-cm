@@ -84,7 +84,7 @@ fun sharedLocation(trackedUserId: String, viewModel: ShareViewModel = viewModel(
     }
 
     LaunchedEffect(state.myLocation, state.trackedLocation) {
-        state.myLocation?.let { local ->
+        state.trackedLocation?.let { local ->
             cameraPositionState.animate(
                 update = CameraUpdateFactory.newLatLngZoom(local, 15f),
                 durationMs = 1000

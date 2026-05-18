@@ -399,56 +399,56 @@ fun validateForm(
     model: RegisterViewModel, state: RegisterState, hasImage: Boolean, context: Context
 ): Boolean {
     if (state.name.isEmpty()) {
-        model.updateNameError("Name is empty")
+        model.updateNameError("Nombre está vacio")
         return false
     } else {
         model.updateNameError("")
     }
 
     if (state.lastname.isEmpty()) {
-        model.updateLastnameError("Lastname is empty")
+        model.updateLastnameError("Apellido está vacio")
         return false
     } else {
         model.updateLastnameError("")
     }
 
     if (state.id.isEmpty()) {
-        model.updateIdError("ID is empty")
+        model.updateIdError("ID está vacio")
         return false
     } else {
         model.updateIdError("")
     }
 
     if (state.email.isEmpty()) {
-        model.updateEmailError("Email is empty")
+        model.updateEmailError("Email está vacio")
         return false
     } else {
         model.updateEmailError("")
     }
 
     if (!validEmailAddress(state.email)) {
-        model.updateEmailError("Not a valid address")
+        model.updateEmailError("Email no es valido")
         return false
     } else {
         model.updateEmailError("")
     }
 
     if (state.password.isEmpty()) {
-        model.updatePasswordError("Password is empty")
+        model.updatePasswordError("Contraseña está vacia")
         return false
     } else {
         model.updatePasswordError("")
     }
 
     if (state.password.length < 6) {
-        model.updatePasswordError("Password is too short")
+        model.updatePasswordError("Contraseña muy corta (6 caracteres min)")
         return false
     } else {
         model.updatePasswordError("")
     }
 
     if (!hasImage) {
-        Toast.makeText(context, "Profile picture is required", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "Foto de perfil necesaria", Toast.LENGTH_SHORT).show()
         return false
     }
 
